@@ -1,17 +1,15 @@
 import java.net.*;
 import java.util.LinkedList;
 
-import org.json.JSONObject;
 
 import java.io.*;
 public class UDPServer {
     public static void main(String args[]) {
     	
-    	LinkedList<Usuario> usuarios = new LinkedList<>();
+    	LinkedList<User> users = new LinkedList<>();
     	
-    	String mensagemRecebida;
+    	String receivedString;
     	
-    	JSONObject objetoRecebido;
     	
         DatagramSocket aSocket = null;
         try {
@@ -20,16 +18,13 @@ public class UDPServer {
             while (true) {
                 DatagramPacket request = new DatagramPacket(buffer, buffer.length);
                 aSocket.receive(request);
-                /*DatagramPacket reply = new DatagramPacket(request.getData(),
-                    request.getLength(), request.getAddress(), request.getPort());
-                aSocket.send(reply);*/
                 
-                mensagemRecebida = new String(request.getData());
-
+                receivedString = new String(request.getData());
                 
-               // objetoRecebido = new JSONObject(mensagemRecebida);
                 
-                System.out.println("Mensagem recebida: "+mensagemRecebida);
+                
+                
+                System.out.println("Mensagem recebida: "+receivedString);
                 
                 System.out.println("Porta: "+request.getSocketAddress());
                 

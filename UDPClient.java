@@ -1,29 +1,55 @@
 import java.net.*;
 import java.util.Scanner;
+
+
+import com.google.gson.Gson;
+
 import java.io.*;
 
 public class UDPClient {
     public static void main(String args[]) {
-        // args fornece o conteúdo da mensagem e o nome de host do servidor
+        // args fornece o conteÃºdo da mensagem e o nome de host do servidor
         DatagramSocket aSocket = null;
+        
+        User user = new User();
+        Message message = new Message();
+        
+        Gson userJSON = new Gson();
+        Gson messageJSON = new Gson();
+        
+        String userString;
+        String messageString;
 
         Scanner s = new Scanner(System.in);
         
-        String msg;
+        String userName;
         
         while(true) {
         	try {
-            	System.out.print("Mensagem: ");
+            	System.out.print("Loging in. Inser your username: ");
             	
-            	msg = s.nextLine();
+            	
+            	userName = s.nextLine();
+            	
+            	user.setUserName(userName);
+            	
+            	userString = userJSON.toJson(user);
+            	
+            	System.out.println("Meu json criado: "+userJSON);
+            	
+            	message.setMessageCode(100);
+
+            	
+            	
+            	
                 aSocket = new DatagramSocket();
-                byte[] m = msg.getBytes();
-                //InetAddress aHost = InetAddress.getByName("172.16.104.89");
+                byte[] m = userName.getBytes();
+
                 InetAddress aHost = InetAddress.getLocalHost();
                 int serverPort = 6698;
                 DatagramPacket request = new DatagramPacket(m, m.length, aHost, serverPort);
                 aSocket.send(request);
-                //aSocket = new DatagramSocket(6545);
+
                 byte[] buffer = new byte[1000];
                 DatagramPacket receive = new DatagramPacket(buffer, buffer.length);
                 aSocket.receive(receive);
