@@ -1,4 +1,5 @@
 import java.net.*;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 
@@ -8,10 +9,12 @@ import java.io.*;
 
 public class UDPClient {
 	
-	
+	private static InetAddress serverIP;
+	private static int serverPort = 6698;
 	
     public static void main(String args[]) {
         // args fornece o conteúdo da mensagem e o nome de host do servidor
+
         DatagramSocket aSocket = null;
         
         Scanner s = new Scanner(System.in);
@@ -22,20 +25,21 @@ public class UDPClient {
         while(true) {
         	try {
         		
+        		serverIP = InetAddress.getLocalHost();
+        		
         		aSocket = new DatagramSocket();
             	
                 System.out.println("Loging in. Inser your nickname: ");
                 
                 aux = s.next();
                 
-                InetAddress aHost = InetAddress.getLocalHost();
-                
-                logIn(aux, aHost, 6698);
+                sendText("testamndo", "");
 
                 byte[] buffer = new byte[1000];
                 DatagramPacket receive = new DatagramPacket(buffer, buffer.length);
                 aSocket.receive(receive);
                 System.out.println("Reply: " + new String(receive.getData()));
+                
             } catch (SocketException e) {
                 System.out.println("Socket: " + e.getMessage());
             } catch (IOException e) {
@@ -45,12 +49,9 @@ public class UDPClient {
                     aSocket.close();
             }
         }
-        
-        
-        
     }
     
-    public static void logIn (String userName, InetAddress host, int serverPort) {
+    public static void logIn (String userName) {
     	
     	User user = new User();
     	Message message = new Message();
@@ -65,27 +66,74 @@ public class UDPClient {
     	
     	System.out.println("Login JSON: "+gson.toJson(user));
     	
-    	sendJson(gson.toJson(message), host, serverPort);
+    	sendJson(gson.toJson(message));
     	
     }
     
-    
-    
-    public static void sendJson (String JSONInfo, InetAddress host, int serverPort) {
+    public static void logOut () {
+
+    	Message message = new Message();
+
+    	Gson gson = new Gson();
+
+    	message.setMessageCode(200);
     	
-    	DatagramSocket aSocket = null;
+    	System.out.println("Logout JSON: "+message);
+    	
+    	sendJson(gson.toJson(message));
+    	
+    }
+    
+    public static void retrieveOnlineUsers () {
+
+    	Message message = new Message();
+
+    	Gson gson = new Gson();
+
+    	message.setMessageCode(300);
+    	
+    	System.out.println("Waiting online user list from server...");
+    	
+    	sendJson(gson.toJson(message));
+    	
+    }
+    
+    public static void sendText (String text, String target) throws UnknownHostException {
+
+    	Message message = new Message();
+
+    	Gson gson = new Gson();
+
+    	InetAddress inetTarget = InetAddress.getByName(target);
+    	
+    	message.setMessageCode(400);
+    	
+    	message.setMessageText(text);
+    	
+    	message.setMessageRecipient(inetTarget);
+    	
+    	System.out.println("Login JSON: "+gson.toJson(message));
+    	
+    	sendJson(gson.toJson(message));
+    	
+    }
+    
+    public static void sendJson (String JSONInfo) {
+    	
+    	DatagramSocket socket = null;
     	Gson gson = new Gson();
     	
     	try {
-			aSocket = new DatagramSocket();
+    		
+			socket = new DatagramSocket();
 			
 			byte[] m = JSONInfo.getBytes();
 
-	        DatagramPacket request = new DatagramPacket(m, m.length, host, serverPort);
+	        DatagramPacket request = new DatagramPacket(m, m.length, serverIP, serverPort);
 	        
-	        System.out.println("Sending packet to IP: "+host.getHostAddress()+" port: "+serverPort);
+	        System.out.println("Sending packet to IP: "+serverIP.getHostAddress()+" port: "+serverPort);
 	        
-	        aSocket.send(request);
+	        socket.send(request);
 
 		} catch (SocketException e) {
 			// TODO Auto-generated catch block
@@ -94,7 +142,7 @@ public class UDPClient {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
-			 aSocket.close();
+			 socket.close();
 		}
 
     }
