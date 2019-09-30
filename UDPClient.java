@@ -33,12 +33,22 @@ public class UDPClient {
                 
                 aux = s.next();
                 
-                sendText("testamndo", "");
+                logIn(aux);
+                
+                System.out.println("divisor");
+                
+                /*logOut();
+                
+                retrieveOnlineUsers();
+                
+                sendText("texto a ser enviado", "Usuario alvo");*/
+                
+                /*sendText("testando", "");
 
                 byte[] buffer = new byte[1000];
                 DatagramPacket receive = new DatagramPacket(buffer, buffer.length);
                 aSocket.receive(receive);
-                System.out.println("Reply: " + new String(receive.getData()));
+                System.out.println("Reply: " + new String(receive.getData()));*/
                 
             } catch (SocketException e) {
                 System.out.println("Socket: " + e.getMessage());
@@ -53,64 +63,57 @@ public class UDPClient {
     
     public static void logIn (String userName) {
     	
-    	User user = new User();
-    	Message message = new Message();
+    	MessageControl messageControl = new MessageControl();
 
     	Gson gson = new Gson();
-
-    	user.setUserName(userName);
-
-    	message.setMessageCode(100);
     	
-    	message.setMessageText(gson.toJson(user));
+    	messageControl = new MessageControl(100, userName);
     	
-    	System.out.println("Login JSON: "+gson.toJson(user));
+    	System.out.println("Login JSON: "+gson.toJson(messageControl));
     	
-    	sendJson(gson.toJson(message));
+    	sendJson(gson.toJson(messageControl));
     	
     }
     
     public static void logOut () {
 
-    	Message message = new Message();
+    	MessageControl messageControl = new MessageControl();
 
     	Gson gson = new Gson();
 
-    	message.setMessageCode(200);
+    	messageControl.setMessageCode(200);
     	
-    	System.out.println("Logout JSON: "+message);
+    	System.out.println("Logout JSON: "+messageControl);
     	
-    	sendJson(gson.toJson(message));
+    	sendJson(gson.toJson(messageControl));
     	
     }
     
     public static void retrieveOnlineUsers () {
 
-    	Message message = new Message();
+    	MessageControl messageControl = new MessageControl();
 
     	Gson gson = new Gson();
 
-    	message.setMessageCode(300);
+    	messageControl.setMessageCode(300);
     	
     	System.out.println("Waiting online user list from server...");
     	
-    	sendJson(gson.toJson(message));
+    	sendJson(gson.toJson(messageControl));
     	
     }
     
-    public static void sendText (String text, String target) throws UnknownHostException {
+    public static void sendText (String text, String targetUsername) throws UnknownHostException {
 
     	Message message = new Message();
 
     	Gson gson = new Gson();
-
-    	InetAddress inetTarget = InetAddress.getByName(target);
     	
     	message.setMessageCode(400);
     	
     	message.setMessageText(text);
     	
-    	message.setMessageRecipient(inetTarget);
+    	message.setMessageRecipient(targetUsername);
     	
     	System.out.println("Login JSON: "+gson.toJson(message));
     	

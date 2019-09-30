@@ -41,7 +41,9 @@ public class User {
 		this.userPort = userPort;
 	}
 
-	
-	
+	@Override
+	public String toString() {
+		return "User [userName=" + userName + ", userIP=" + userIP + ", userPort=" + userPort + "]";
+	}
 
 }

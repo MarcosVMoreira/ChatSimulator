@@ -6,14 +6,14 @@ public class Message {
 	
 	private String messageText;
 	
-	private InetAddress messageSource;
+	private String messageSource;
 	
-	private InetAddress messageRecipient;
+	private String messageRecipient;
 	
 	public Message() {
 	}
 
-	public Message(int messageCode, String messageText, InetAddress messageSource, InetAddress messageRecipient) {
+	public Message(int messageCode, String messageText, String messageSource, String messageRecipient) {
 		super();
 		this.messageCode = messageCode;
 		this.messageText = messageText;
@@ -37,22 +37,26 @@ public class Message {
 		this.messageText = messageText;
 	}
 
-	public InetAddress getMessageSource() {
+	public String getMessageSource() {
 		return messageSource;
 	}
 
-	public void setMessageSource(InetAddress messageSource) {
+	public void setMessageSource(String messageSource) {
 		this.messageSource = messageSource;
 	}
 
-	public InetAddress getMessageRecipient() {
+	public String getMessageRecipient() {
 		return messageRecipient;
 	}
 
-	public void setMessageRecipient(InetAddress messageRecipient) {
+	public void setMessageRecipient(String messageRecipient) {
 		this.messageRecipient = messageRecipient;
 	}
-	
-	
 
+	@Override
+	public String toString() {
+		return "Message [messageCode=" + messageCode + ", messageText=" + messageText + ", messageSource="
+				+ messageSource + ", messageRecipient=" + messageRecipient + "]";
+	}
+	
 }

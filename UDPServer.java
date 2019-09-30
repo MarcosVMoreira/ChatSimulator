@@ -1,7 +1,6 @@
 import java.net.*;
 import java.util.LinkedList;
 
-
 import java.io.*;
 public class UDPServer {
     public static void main(String args[]) {
@@ -21,7 +20,9 @@ public class UDPServer {
                 
                 receivedString = new String(request.getData());
                 
+                System.out.println("passando");
                 
+                processReceivedMessage(receivedString);
                 
                 
                 System.out.println("Mensagem recebida: "+receivedString);
@@ -37,4 +38,25 @@ public class UDPServer {
             if (aSocket != null) aSocket.close();
         }
     }
+    
+    public static void processReceivedMessage (String receivedString) {
+    	
+    	//Gson g = new Gson(); Player p = g.fromJson(jsonString, Player.class)
+    	
+    	Object reflectionAux = null;
+    	
+    	try {
+			reflectionAux = Class.forName("MessageControl").newInstance();
+			
+			System.out.println("Nome da Classe: "+reflectionAux.getClass().getName());
+			
+		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	
+    	
+    }
+    
+    
 }
