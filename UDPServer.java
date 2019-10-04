@@ -1,14 +1,22 @@
 import java.net.*;
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+import com.google.gson.Gson;
+
+
 
 import java.io.*;
+
 public class UDPServer {
+	
+	private static ArrayList<User> userList;
+	
     public static void main(String args[]) {
-    	
-    	LinkedList<User> users = new LinkedList<>();
-    	
+
     	String receivedString;
     	
+    	userList = new ArrayList<>();
     	
         DatagramSocket aSocket = null;
         try {
@@ -17,17 +25,14 @@ public class UDPServer {
             while (true) {
                 DatagramPacket request = new DatagramPacket(buffer, buffer.length);
                 aSocket.receive(request);
-                
-                receivedString = new String(request.getData());
-                
-                System.out.println("passando");
-                
-                processReceivedMessage(receivedString);
-                
-                
+
+                receivedString = new String(buffer, 0, request.getLength());
+
                 System.out.println("Mensagem recebida: "+receivedString);
+
+                processReceivedMessage(receivedString, request.getAddress(), request.getPort());
                 
-                System.out.println("Porta: "+request.getSocketAddress());
+                System.out.println("Porta: "+request.getPort()+" IP: "+request.getAddress().getHostAddress());
                 
             }
         } catch (SocketException e) {
@@ -39,21 +44,54 @@ public class UDPServer {
         }
     }
     
-    public static void processReceivedMessage (String receivedString) {
+    public static void processReceivedMessage (String receivedString, InetAddress sourceIP, int sourcePort) {
     	
-    	//Gson g = new Gson(); Player p = g.fromJson(jsonString, Player.class)
+    	Gson gson = new Gson();
     	
-    	Object reflectionAux = null;
+    	Message message = gson.fromJson(receivedString, Message.class);
+
+    	//login
+    	if (message.getMessageCode() == 100) {
+    		
+    		User user = new User();
+    		
+    		user.setUserName(message.getMessageText());
+    		
+    		user.setUserIP(sourceIP);
+    		
+    		user.setUserPort(sourcePort);
+    		
+    		userList.add(user);
+    		
+    		System.out.println(user.getUserName() + " ficou online.");
+    		
+    	//logout	
+    	} else if (message.getMessageCode() == 200) {
+    		
+			for (int i = 0; i < userList.size(); i++) {
+		        if(userList.get(i).getUserIP().equals(sourceIP)) {
+		        	System.out.println(userList.get(i).getUserName() + " ficou offline.");
+		            userList.remove(i);
+		        }
+		    }
+    		  
+		//online users
+    	} else if (message.getMessageCode() == 300) {
+    		
+    		
+    		
+    		
+    		
+    		
+    	} else if (message.getMessageCode() == 400) {
+    		
+    		MessageControl messageControl = gson.fromJson(receivedString, MessageControl.class);
+    		
+    	} else {
+    		System.out.println("ERRO: Código não reconhecido.");
+    	}
     	
-    	try {
-			reflectionAux = Class.forName("MessageControl").newInstance();
-			
-			System.out.println("Nome da Classe: "+reflectionAux.getClass().getName());
-			
-		} catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+    	
     	
     	
     }

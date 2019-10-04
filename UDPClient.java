@@ -2,7 +2,6 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-
 import com.google.gson.Gson;
 
 import java.io.*;
