@@ -8,13 +8,15 @@ import java.io.*;
 
 public class UDPClient {
 	
-	private static InetAddress serverIP;
-	private static int serverPort = 6698;
+	private static PacketSender packetSender;
+
 	
-    public static void main(String args[]) {
+    public static void main(String args[]) throws UnknownHostException {
         // args fornece o conteúdo da mensagem e o nome de host do servidor
 
         DatagramSocket aSocket = null;
+        
+         packetSender = new PacketSender(InetAddress.getLocalHost(), 6698);
         
         Scanner s = new Scanner(System.in);
         
@@ -24,8 +26,6 @@ public class UDPClient {
         while(true) {
         	try {
         		
-        		serverIP = InetAddress.getLocalHost();
-        		
         		aSocket = new DatagramSocket();
             	
                 System.out.println("Loging in. Inser your nickname: ");
@@ -34,7 +34,11 @@ public class UDPClient {
                 
                 logIn(aux);
                 
-                System.out.println("divisor");
+                logIn("Jose");
+                
+                logIn("Maria");
+                
+                retrieveOnlineUsers();
                 
                 /*logOut();
                 
@@ -42,12 +46,11 @@ public class UDPClient {
                 
                 sendText("texto a ser enviado", "Usuario alvo");*/
                 
-                /*sendText("testando", "");
 
                 byte[] buffer = new byte[1000];
                 DatagramPacket receive = new DatagramPacket(buffer, buffer.length);
                 aSocket.receive(receive);
-                System.out.println("Reply: " + new String(receive.getData()));*/
+                System.out.println("Reply: " + new String(receive.getData()));
                 
             } catch (SocketException e) {
                 System.out.println("Socket: " + e.getMessage());
@@ -70,7 +73,7 @@ public class UDPClient {
     	
     	System.out.println("Login JSON: "+gson.toJson(messageControl));
     	
-    	sendJson(gson.toJson(messageControl));
+    	packetSender.sendJson(gson.toJson(messageControl));
     	
     }
     
@@ -84,7 +87,7 @@ public class UDPClient {
     	
     	System.out.println("Logout JSON: "+messageControl);
     	
-    	sendJson(gson.toJson(messageControl));
+    	packetSender.sendJson(gson.toJson(messageControl));
     	
     }
     
@@ -98,7 +101,7 @@ public class UDPClient {
     	
     	System.out.println("Waiting online user list from server...");
     	
-    	sendJson(gson.toJson(messageControl));
+    	packetSender.sendJson(gson.toJson(messageControl));
     	
     }
     
@@ -116,37 +119,10 @@ public class UDPClient {
     	
     	System.out.println("Login JSON: "+gson.toJson(message));
     	
-    	sendJson(gson.toJson(message));
+    	packetSender.sendJson(gson.toJson(message));
     	
     }
     
-    public static void sendJson (String JSONInfo) {
-    	
-    	DatagramSocket socket = null;
-    	Gson gson = new Gson();
-    	
-    	try {
-    		
-			socket = new DatagramSocket();
-			
-			byte[] m = JSONInfo.getBytes();
-
-	        DatagramPacket request = new DatagramPacket(m, m.length, serverIP, serverPort);
-	        
-	        System.out.println("Sending packet to IP: "+serverIP.getHostAddress()+" port: "+serverPort);
-	        
-	        socket.send(request);
-
-		} catch (SocketException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
-			 socket.close();
-		}
-
-    }
+    
     
 }

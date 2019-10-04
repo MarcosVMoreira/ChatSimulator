@@ -4,19 +4,25 @@ import java.util.Arrays;
 
 import com.google.gson.Gson;
 
-
-
 import java.io.*;
 
 public class UDPServer {
 	
 	private static ArrayList<User> userList;
 	
-    public static void main(String args[]) {
+	private static ArrayList<String> nameList;
+	
+	private static PacketSender packetSender;
+	
+    public static void main(String args[]) throws UnknownHostException {
+    	
+    	
 
     	String receivedString;
     	
     	userList = new ArrayList<>();
+    	
+    	nameList = new ArrayList<>();
     	
         DatagramSocket aSocket = null;
         try {
@@ -44,11 +50,13 @@ public class UDPServer {
         }
     }
     
-    public static void processReceivedMessage (String receivedString, InetAddress sourceIP, int sourcePort) {
+    public static void processReceivedMessage (String receivedString, InetAddress sourceIP, int sourcePort) throws UnknownHostException {
     	
     	Gson gson = new Gson();
     	
     	Message message = gson.fromJson(receivedString, Message.class);
+    	
+    	
 
     	//login
     	if (message.getMessageCode() == 100) {
@@ -63,6 +71,8 @@ public class UDPServer {
     		
     		userList.add(user);
     		
+    		nameList.add(message.getMessageText());
+    		
     		System.out.println(user.getUserName() + " ficou online.");
     		
     	//logout	
@@ -71,17 +81,23 @@ public class UDPServer {
 			for (int i = 0; i < userList.size(); i++) {
 		        if(userList.get(i).getUserIP().equals(sourceIP)) {
 		        	System.out.println(userList.get(i).getUserName() + " ficou offline.");
+		        	nameList.remove(userList.get(i).getUserName());
 		            userList.remove(i);
 		        }
 		    }
-    		  
+			
 		//online users
     	} else if (message.getMessageCode() == 300) {
     		
+    		packetSender = new PacketSender(sourceIP, sourcePort);
     		
+    		MessageControl messageControl = new MessageControl();
     		
+    		messageControl.setMessageCode(300);
     		
+    		messageControl.setMessageText(nameList.toString());
     		
+    		packetSender.sendJson(gson.toJson(messageControl));
     		
     	} else if (message.getMessageCode() == 400) {
     		
