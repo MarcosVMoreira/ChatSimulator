@@ -3,33 +3,35 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 
 import com.google.gson.Gson;
 
 public class PacketSender {
 
-	private static InetAddress serverIP;
+	private static String serverIP;
 	private static int serverPort;
+	private static DatagramSocket socket = null;
 
-	public PacketSender(InetAddress serverIP, int serverPort) {
+	public PacketSender(String serverIP, int serverPort, DatagramSocket socket) {
 		this.serverIP = serverIP;
 		this.serverPort = serverPort;
+		this.socket = socket;
 	}
 
-	public static void sendJson(String JSONInfo) {
+	public static void sendJson(String JSONInfo) throws UnknownHostException {
 
-		DatagramSocket socket = null;
+		InetAddress inetAdress = InetAddress.getByName(serverIP);
+		
 		Gson gson = new Gson();
 
 		try {
 
-			socket = new DatagramSocket();
-
 			byte[] m = JSONInfo.getBytes();
 
-			DatagramPacket request = new DatagramPacket(m, m.length, serverIP, serverPort);
+			DatagramPacket request = new DatagramPacket(m, m.length, inetAdress, serverPort);
 
-			System.out.println("Sending packet to IP: " + serverIP.getHostAddress() + " port: " + serverPort);
+			System.out.println("Sending packet to IP: " + inetAdress + " port: " + serverPort);
 			
 
 			socket.send(request);
@@ -41,7 +43,9 @@ public class PacketSender {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
-			socket.close();
+			 
+        	System.out.println("PacketSender finally");
+	            	
 		}
 
 	}

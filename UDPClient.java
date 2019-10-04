@@ -9,14 +9,23 @@ import java.io.*;
 public class UDPClient {
 	
 	private static PacketSender packetSender;
-
 	
-    public static void main(String args[]) throws UnknownHostException {
+	private static String serverIP;
+	
+	private static int serverPort = 6698;
+
+	private static DatagramSocket aSocket;
+	
+    public static void main(String args[]) throws UnknownHostException, SocketException {
         // args fornece o conteúdo da mensagem e o nome de host do servidor
 
-        DatagramSocket aSocket = null;
+        aSocket = new DatagramSocket();
         
-         packetSender = new PacketSender(InetAddress.getLocalHost(), 6698);
+        serverIP = InetAddress.getLocalHost().getHostAddress();
+        
+        System.out.println("Porta enviada: "+aSocket.getLocalPort()+" Port: "+aSocket.getPort());
+        
+        
         
         Scanner s = new Scanner(System.in);
         
@@ -26,7 +35,7 @@ public class UDPClient {
         while(true) {
         	try {
         		
-        		aSocket = new DatagramSocket();
+        		
             	
                 System.out.println("Loging in. Inser your nickname: ");
                 
@@ -45,11 +54,12 @@ public class UDPClient {
                 retrieveOnlineUsers();
                 
                 sendText("texto a ser enviado", "Usuario alvo");*/
-                
 
                 byte[] buffer = new byte[1000];
                 DatagramPacket receive = new DatagramPacket(buffer, buffer.length);
+
                 aSocket.receive(receive);
+
                 System.out.println("Reply: " + new String(receive.getData()));
                 
             } catch (SocketException e) {
@@ -63,7 +73,9 @@ public class UDPClient {
         }
     }
     
-    public static void logIn (String userName) {
+    public static void logIn (String userName) throws UnknownHostException {
+    	
+    	packetSender = new PacketSender(serverIP, serverPort, aSocket);
     	
     	MessageControl messageControl = new MessageControl();
 
@@ -77,7 +89,7 @@ public class UDPClient {
     	
     }
     
-    public static void logOut () {
+    public static void logOut () throws UnknownHostException {
 
     	MessageControl messageControl = new MessageControl();
 
@@ -91,7 +103,7 @@ public class UDPClient {
     	
     }
     
-    public static void retrieveOnlineUsers () {
+    public static void retrieveOnlineUsers () throws UnknownHostException {
 
     	MessageControl messageControl = new MessageControl();
 

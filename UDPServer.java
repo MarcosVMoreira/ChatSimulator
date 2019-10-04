@@ -14,9 +14,9 @@ public class UDPServer {
 	
 	private static PacketSender packetSender;
 	
+	private static DatagramSocket aSocket = null;
+	
     public static void main(String args[]) throws UnknownHostException {
-    	
-    	
 
     	String receivedString;
     	
@@ -24,9 +24,12 @@ public class UDPServer {
     	
     	nameList = new ArrayList<>();
     	
-        DatagramSocket aSocket = null;
+        
         try {
             aSocket = new DatagramSocket(6698);
+            
+            System.out.println("Server IP: "+InetAddress.getLocalHost().getHostAddress()+" Server IP do socket: "+aSocket.getLocalAddress().getHostAddress());
+            
             byte[] buffer = new byte[1000];
             while (true) {
                 DatagramPacket request = new DatagramPacket(buffer, buffer.length);
@@ -38,7 +41,7 @@ public class UDPServer {
 
                 processReceivedMessage(receivedString, request.getAddress(), request.getPort());
                 
-                System.out.println("Porta: "+request.getPort()+" IP: "+request.getAddress().getHostAddress());
+                System.out.println("Message received. Port: "+request.getPort()+" IP: "+request.getAddress().getHostAddress());
                 
             }
         } catch (SocketException e) {
@@ -46,7 +49,11 @@ public class UDPServer {
         } catch (IOException e) {
             System.out.println("IO: " + e.getMessage());
         } finally {
-            if (aSocket != null) aSocket.close();
+        	
+            if (aSocket != null) {
+            	System.out.println("Closing UDPServer socket...");
+            	aSocket.close();
+            }
         }
     }
     
@@ -73,14 +80,14 @@ public class UDPServer {
     		
     		nameList.add(message.getMessageText());
     		
-    		System.out.println(user.getUserName() + " ficou online.");
+    		System.out.println(user.getUserName() + " is online.");
     		
     	//logout	
     	} else if (message.getMessageCode() == 200) {
     		
 			for (int i = 0; i < userList.size(); i++) {
 		        if(userList.get(i).getUserIP().equals(sourceIP)) {
-		        	System.out.println(userList.get(i).getUserName() + " ficou offline.");
+		        	System.out.println(userList.get(i).getUserName() + " is offline.");
 		        	nameList.remove(userList.get(i).getUserName());
 		            userList.remove(i);
 		        }
@@ -89,23 +96,24 @@ public class UDPServer {
 		//online users
     	} else if (message.getMessageCode() == 300) {
     		
-    		packetSender = new PacketSender(sourceIP, sourcePort);
+    		packetSender = new PacketSender(sourceIP.getHostAddress(), sourcePort, aSocket);
     		
     		MessageControl messageControl = new MessageControl();
     		
     		messageControl.setMessageCode(300);
     		
-    		messageControl.setMessageText(nameList.toString());
+    		messageControl.setMessageText(gson.toJson(nameList));
     		
-    		packetSender.sendJson(gson.toJson(messageControl));
+    		packetSender.sendJson(gson.toJson(messageControl));    		
     		
     	} else if (message.getMessageCode() == 400) {
     		
     		MessageControl messageControl = gson.fromJson(receivedString, MessageControl.class);
     		
     	} else {
-    		System.out.println("ERRO: Código não reconhecido.");
+    		System.out.println("ERROR: invalid code.");
     	}
+    	
     	
     	
     	
