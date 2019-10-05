@@ -1,3 +1,4 @@
+package Controller;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -21,10 +22,8 @@ public class PacketSender {
 
 	public static void sendJson(String JSONInfo) throws UnknownHostException {
 
-		System.out.println("Valor das variaveis: serverIP "+serverIP+" serverPort "+serverPort+" socket "+socket);
-		
 		InetAddress inetAdress = InetAddress.getByName(serverIP);
-		
+
 		Gson gson = new Gson();
 
 		try {
@@ -44,9 +43,9 @@ public class PacketSender {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
-			 
-        	System.out.println("PacketSender finally");
-	            	
+
+			System.out.println("PacketSender finally");
+
 		}
 
 	}

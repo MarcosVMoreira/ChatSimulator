@@ -1,8 +1,13 @@
+package Controller;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 import com.google.gson.Gson;
+
+import Model.Message;
+import Model.MessageControl;
+import Model.User;
 
 import java.io.*;
 
@@ -18,36 +23,12 @@ public class UDPServer {
 
 	public static void main(String args[]) throws UnknownHostException {
 
-		String receivedString;
-
 		userList = new ArrayList<>();
 
 		nameList = new ArrayList<>();
+		
+		messageReceiver();
 
-		try {
-			aSocket = new DatagramSocket(6698);
-
-			byte[] buffer = new byte[1000];
-			while (true) {
-				DatagramPacket request = new DatagramPacket(buffer, buffer.length);
-				aSocket.receive(request);
-
-				receivedString = new String(buffer, 0, request.getLength());
-
-				processReceivedMessage(receivedString, request.getAddress(), request.getPort());
-
-			}
-		} catch (SocketException e) {
-			System.out.println("Socket: " + e.getMessage());
-		} catch (IOException e) {
-			System.out.println("IO: " + e.getMessage());
-		} finally {
-
-			if (aSocket != null) {
-				System.out.println("Closing UDPServer socket...");
-				aSocket.close();
-			}
-		}
 	}
 
 	public static void processReceivedMessage(String receivedString, InetAddress sourceIP, int sourcePort)
@@ -105,25 +86,26 @@ public class UDPServer {
 			String recipientName = messageReceived.getMessageRecipient();
 
 			String[] recipientIpAndPort = findIPAndPortByUsername(recipientName);
+
 			
-			System.out.println("Valor do recipientIpAndPort[0] "+recipientIpAndPort[0]);
-			System.out.println("Valor do recipientIpAndPort[1] "+recipientIpAndPort[1]);
-			System.out.println("Valor do Integer.parseInt(recipientIpAndPort[1]) "+Integer.parseInt(recipientIpAndPort[1]));
-			
-			packetSender = new PacketSender(recipientIpAndPort[0], Integer.parseInt(recipientIpAndPort[1]), aSocket);
+			if (recipientIpAndPort != null) {
+				packetSender = new PacketSender(recipientIpAndPort[0], Integer.parseInt(recipientIpAndPort[1]), aSocket);
 
-			message.setMessageCode(400);
+				message.setMessageCode(400);
 
-			message.setMessageText(messageReceived.getMessageText());
+				message.setMessageText(messageReceived.getMessageText());
 
-			message.setMessageSource(messageReceived.getMessageSource());
+				message.setMessageSource(messageReceived.getMessageSource());
 
-			message.setMessageRecipient(recipientName);
+				message.setMessageRecipient(recipientName);
 
-			packetSender.sendJson(gson.toJson(message));
+				packetSender.sendJson(gson.toJson(message));
+			} else {
+				System.out.println("Recipient user not found.");
+			}
 
 		} else {
-			System.out.println("ERROR: invalid code.");
+			System.out.println("ERROR: invalid messageCode.");
 		}
 
 	}
@@ -152,6 +134,36 @@ public class UDPServer {
 		}
 
 		return null;
+	}
+
+	public static void messageReceiver() {
+		
+		String receivedString;
+		
+		try {
+			aSocket = new DatagramSocket(6698);
+
+			byte[] buffer = new byte[1000];
+			while (true) {
+				DatagramPacket request = new DatagramPacket(buffer, buffer.length);
+				aSocket.receive(request);
+
+				receivedString = new String(buffer, 0, request.getLength());
+
+				processReceivedMessage(receivedString, request.getAddress(), request.getPort());
+
+			}
+		} catch (SocketException e) {
+			System.out.println("Socket: " + e.getMessage());
+		} catch (IOException e) {
+			System.out.println("IO: " + e.getMessage());
+		} finally {
+
+			if (aSocket != null) {
+				System.out.println("Closing UDPServer socket...");
+				aSocket.close();
+			}
+		}
 	}
 
 }
