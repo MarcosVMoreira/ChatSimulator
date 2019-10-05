@@ -21,6 +21,8 @@ public class PacketSender {
 
 	public static void sendJson(String JSONInfo) throws UnknownHostException {
 
+		System.out.println("Valor das variaveis: serverIP "+serverIP+" serverPort "+serverPort+" socket "+socket);
+		
 		InetAddress inetAdress = InetAddress.getByName(serverIP);
 		
 		Gson gson = new Gson();
@@ -32,7 +34,6 @@ public class PacketSender {
 			DatagramPacket request = new DatagramPacket(m, m.length, inetAdress, serverPort);
 
 			System.out.println("Sending packet to IP: " + inetAdress + " port: " + serverPort);
-			
 
 			socket.send(request);
 
