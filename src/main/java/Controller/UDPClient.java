@@ -26,6 +26,8 @@ public class UDPClient {
 
     private static ChangeListenerUDP listener;
 
+    private static ArrayList<String> onlineUsers;
+
     public UDPClient() throws SocketException, UnknownHostException {
 
         aSocket = new DatagramSocket();
@@ -40,6 +42,8 @@ public class UDPClient {
         Scanner s = new Scanner(System.in);
 
         String aux;
+
+        listenForNewMessages();
 
         while (true) {
 
@@ -166,13 +170,7 @@ public class UDPClient {
         // online users
         if (messageReceived.getMessageCode() == 300) {
 
-            if (listener != null) {
-                listener.onChangeHappened();
-            }
-
             String plainString;
-
-            ArrayList<String> onlineUsers;
 
             plainString = messageReceived.getMessageText().replace("[", "").replace("]", "").replace(" ", "");
 
@@ -183,19 +181,23 @@ public class UDPClient {
                 System.out.println(string.replace("\"", ""));
             }
 
-        } else if (messageReceived.getMessageCode() == 400) {
-
             if (listener != null) {
                 listener.onChangeHappened();
             }
 
+        } else if (messageReceived.getMessageCode() == 400) {
+
             messageLog
                     = messageLog.concat("\n" + messageReceived.getMessageSource() + ": " + messageReceived.getMessageText());
+
+            if (listener != null) {
+                listener.onChangeHappened();
+            }
         }
 
     }
 
-    public void listenForNewMessages() {
+    public static void listenForNewMessages() {
         new Thread() {
             @Override
             public void run() {
@@ -221,5 +223,10 @@ public class UDPClient {
     public interface ChangeListenerUDP {
 
         public void onChangeHappened();
+
+    }
+
+    public ArrayList<String> getOnlineUsers() {
+        return onlineUsers;
     }
 }
