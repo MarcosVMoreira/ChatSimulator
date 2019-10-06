@@ -5,6 +5,11 @@
  */
 package View;
 
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  *
  * @author Marcos
@@ -16,7 +21,7 @@ public class Login extends javax.swing.JFrame {
      */
     public Login() {
         initComponents();
-        
+
         this.setLocationRelativeTo(null);
     }
 
@@ -78,13 +83,19 @@ public class Login extends javax.swing.JFrame {
 
     private void btnLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoginActionPerformed
 
-        String username = txtUsername.getText();
-
-        Client client = new Client(username);
-
-        client.setVisible(true);
-
-        this.dispose();
+        try {
+            String username = txtUsername.getText();
+            
+            Client client = new Client(username);
+            
+            client.setVisible(true);
+            
+            this.dispose();
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(Login.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SocketException ex) {
+            Logger.getLogger(Login.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_btnLoginActionPerformed
 
     /**

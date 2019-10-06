@@ -1,4 +1,5 @@
 package Controller;
+
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,187 +11,215 @@ import Model.Message;
 import Model.MessageControl;
 
 import java.io.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 public class UDPClient {
 
-	private static PacketSender packetSender;
+    private static PacketSender packetSender;
 
-	private static String serverIP;
+    private static String serverIP, userName, messageLog = "";
 
-	private static int serverPort = 6698;
+    private static int serverPort = 6698;
 
-	private static DatagramSocket aSocket;
+    private static DatagramSocket aSocket;
 
-	private static String userName;
+    private static ChangeListenerUDP listener;
 
-	public static void main(String args[]) throws UnknownHostException, SocketException {
+    public UDPClient() throws SocketException, UnknownHostException {
 
-		aSocket = new DatagramSocket();
+        aSocket = new DatagramSocket();
 
-		serverIP = InetAddress.getLocalHost().getHostAddress();
+        serverIP = InetAddress.getLocalHost().getHostAddress();
 
-		packetSender = new PacketSender(serverIP, serverPort, aSocket);
+        packetSender = new PacketSender(serverIP, serverPort, aSocket);
+    }
 
-		Scanner s = new Scanner(System.in);
+    public static void main(String args[]) throws UnknownHostException, SocketException {
 
-		String aux;
+        Scanner s = new Scanner(System.in);
 
-		new Thread() {
-			@Override
-			public void run() {
+        String aux;
 
-				while (true) {
+        while (true) {
 
-					checkForNewReceivedMessages();
+            System.out.println("1 - Login\n2 - Logout\n3 - Retrieve online users\n4 - Send text");
+            System.out.print("Insert your action: ");
 
-				}
+            aux = s.next();
 
-			}
-		}.start();
+            switch (aux) {
+                case "1":
+                    System.out.println("Loging in. Insert your nickname: ");
+                    userName = s.next();
+                    //logIn(userName);
+                    break;
+                case "2":
+                    logOut();
+                    break;
+                case "3":
+                    retrieveOnlineUsers();
+                    break;
+                case "4":
+                    System.out.println("Sending a message. Insert target username: ");
+                    String targetUsername = s.next();
+                    System.out.println("Now, insert the message: ");
+                    String messageText = s.next();
+                    sendText(messageText, userName, targetUsername);
+                    break;
+                default:
+                    System.out.println("Invalid option.");
+            }
 
-		while (true) {
+        }
 
-			System.out.println("1 - Login\n2 - Logout\n3 - Retrieve online users\n4 - Send text");
-			System.out.print("Insert your action: ");
+    }
 
-			aux = s.next();
+    public void logIn(String userName) throws UnknownHostException {
 
-			switch (aux) {
-			case "1":
-				System.out.println("Loging in. Insert your nickname: ");
-				userName = s.next();
-				logIn(userName);
-				break;
-			case "2":
-				logOut();
-				break;
-			case "3":
-				retrieveOnlineUsers();
-				break;
-			case "4":
-				System.out.println("Sending a message. Insert target username: ");
-				String targetUsername = s.next();
-				System.out.println("Now, insert the message: ");
-				String messageText = s.next();
-				sendText(messageText, userName, targetUsername);
-				break;
-			default:
-				System.out.println("Invalid option.");
-			}
+        MessageControl messageControl = new MessageControl();
 
-		}
+        Gson gson = new Gson();
 
-	}
+        messageControl = new MessageControl(100, userName);
 
-	public static void logIn(String userName) throws UnknownHostException {
+        System.out.println("Login JSON: " + gson.toJson(messageControl));
 
-		MessageControl messageControl = new MessageControl();
+        packetSender.sendJson(gson.toJson(messageControl));
 
-		Gson gson = new Gson();
+    }
 
-		messageControl = new MessageControl(100, userName);
+    public static void logOut() throws UnknownHostException {
 
-		System.out.println("Login JSON: " + gson.toJson(messageControl));
+        MessageControl messageControl = new MessageControl();
 
-		packetSender.sendJson(gson.toJson(messageControl));
+        Gson gson = new Gson();
 
-	}
+        messageControl.setMessageCode(200);
 
-	public static void logOut() throws UnknownHostException {
+        System.out.println("Logout JSON: " + messageControl);
 
-		MessageControl messageControl = new MessageControl();
+        packetSender.sendJson(gson.toJson(messageControl));
 
-		Gson gson = new Gson();
+    }
 
-		messageControl.setMessageCode(200);
+    public static void retrieveOnlineUsers() throws UnknownHostException {
 
-		System.out.println("Logout JSON: " + messageControl);
+        MessageControl messageControl = new MessageControl();
 
-		packetSender.sendJson(gson.toJson(messageControl));
+        Gson gson = new Gson();
 
-	}
+        messageControl.setMessageCode(300);
 
-	public static void retrieveOnlineUsers() throws UnknownHostException {
+        System.out.println("Waiting online user list from server...");
 
-		MessageControl messageControl = new MessageControl();
+        packetSender.sendJson(gson.toJson(messageControl));
 
-		Gson gson = new Gson();
+    }
 
-		messageControl.setMessageCode(300);
+    public static void sendText(String text, String sourceUsername, String targetUsername) throws UnknownHostException {
 
-		System.out.println("Waiting online user list from server...");
+        Message message = new Message();
 
-		packetSender.sendJson(gson.toJson(messageControl));
+        Gson gson = new Gson();
 
-	}
+        message.setMessageCode(400);
 
-	public static void sendText(String text, String sourceUsername, String targetUsername) throws UnknownHostException {
+        message.setMessageText(text);
 
-		Message message = new Message();
+        message.setMessageRecipient(targetUsername);
 
-		Gson gson = new Gson();
+        message.setMessageSource(sourceUsername);
 
-		message.setMessageCode(400);
+        System.out.println("Login JSON: " + gson.toJson(message));
 
-		message.setMessageText(text);
+        packetSender.sendJson(gson.toJson(message));
 
-		message.setMessageRecipient(targetUsername);
+    }
 
-		message.setMessageSource(sourceUsername);
+    public static void checkForNewReceivedMessages() {
 
-		System.out.println("Login JSON: " + gson.toJson(message));
+        String receivedString;
 
-		packetSender.sendJson(gson.toJson(message));
+        byte[] buffer = new byte[1000];
+        DatagramPacket receive = new DatagramPacket(buffer, buffer.length);
 
-	}
+        try {
+            aSocket.receive(receive);
 
-	public static void checkForNewReceivedMessages() {
-		
-		String receivedString;
-		
-		byte[] buffer = new byte[1000];
-		DatagramPacket receive = new DatagramPacket(buffer, buffer.length);
+            receivedString = new String(buffer, 0, receive.getLength());
 
-		try {
-			aSocket.receive(receive);
-			
-			receivedString = new String(buffer, 0, receive.getLength());
-			
-			processReceivedMessage(receivedString);
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+            processReceivedMessage(receivedString);
 
-	}
-	
-	public static void processReceivedMessage (String receivedString) {
-		
-		Gson gson = new Gson();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-		Message messageReceived = gson.fromJson(receivedString, Message.class);
+    }
 
-		// online users
-		if (messageReceived.getMessageCode() == 300) {
+    public static void processReceivedMessage(String receivedString) {
 
-			String plainString;
-			
-			ArrayList<String> onlineUsers;
-			
-			plainString = messageReceived.getMessageText().replace("[", "").replace("]", "").replace(" ", "");
-			
-			
-			onlineUsers = new ArrayList<String>(Arrays.asList(plainString.split(",")));
-			
-			System.out.println("\nOnline users:");
-			for (String string : onlineUsers) {
-				System.out.println(string.replace("\"", ""));
-			}
-			
-		} else if (messageReceived.getMessageCode() == 400) {
-			System.out.println("\n"+messageReceived.getMessageSource()+": "+messageReceived.getMessageText());
-		}
-		
-	}
+        Gson gson = new Gson();
 
+        Message messageReceived = gson.fromJson(receivedString, Message.class);
+
+        // online users
+        if (messageReceived.getMessageCode() == 300) {
+
+            if (listener != null) {
+                listener.onChangeHappened();
+            }
+
+            String plainString;
+
+            ArrayList<String> onlineUsers;
+
+            plainString = messageReceived.getMessageText().replace("[", "").replace("]", "").replace(" ", "");
+
+            onlineUsers = new ArrayList<String>(Arrays.asList(plainString.split(",")));
+
+            System.out.println("\nOnline users:");
+            for (String string : onlineUsers) {
+                System.out.println(string.replace("\"", ""));
+            }
+
+        } else if (messageReceived.getMessageCode() == 400) {
+
+            if (listener != null) {
+                listener.onChangeHappened();
+            }
+
+            messageLog
+                    = messageLog.concat("\n" + messageReceived.getMessageSource() + ": " + messageReceived.getMessageText());
+        }
+
+    }
+
+    public void listenForNewMessages() {
+        new Thread() {
+            @Override
+            public void run() {
+                while (true) {
+                    checkForNewReceivedMessages();
+                }
+            }
+        }.start();
+    }
+
+    public void setChangeListener(ChangeListenerUDP listener) {
+        this.listener = listener;
+    }
+
+    public String getMessageLog() {
+        return messageLog;
+    }
+
+    public void concatMessageLog(String aMessageLog) {
+        messageLog = messageLog.concat(aMessageLog);
+    }
+
+    public interface ChangeListenerUDP {
+
+        public void onChangeHappened();
+    }
 }

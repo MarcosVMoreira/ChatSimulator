@@ -1,4 +1,5 @@
 package Controller;
+
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,157 +14,156 @@ import java.io.*;
 
 public class UDPServer {
 
-	private static ArrayList<User> userList;
+    private static ArrayList<User> userList;
 
-	private static ArrayList<String> nameList;
+    private static ArrayList<String> nameList;
 
-	private static PacketSender packetSender;
+    private static PacketSender packetSender;
 
-	private static DatagramSocket aSocket = null;
+    private static DatagramSocket aSocket = null;
 
-	public static void main(String args[]) throws UnknownHostException {
+    public static void main(String args[]) throws UnknownHostException {
 
-		userList = new ArrayList<>();
+        userList = new ArrayList<>();
 
-		nameList = new ArrayList<>();
-		
-		messageReceiver();
+        nameList = new ArrayList<>();
 
-	}
+        messageReceiver();
 
-	public static void processReceivedMessage(String receivedString, InetAddress sourceIP, int sourcePort)
-			throws UnknownHostException {
+    }
 
-		Gson gson = new Gson();
+    public static void processReceivedMessage(String receivedString, InetAddress sourceIP, int sourcePort)
+            throws UnknownHostException {
 
-		Message messageReceived = gson.fromJson(receivedString, Message.class);
+        Gson gson = new Gson();
 
-		// login
-		if (messageReceived.getMessageCode() == 100) {
+        Message messageReceived = gson.fromJson(receivedString, Message.class);
 
-			User user = new User();
+        // login
+        if (messageReceived.getMessageCode() == 100) {
 
-			user.setUserName(messageReceived.getMessageText());
+            User user = new User();
 
-			user.setUserIP(sourceIP);
+            user.setUserName(messageReceived.getMessageText());
 
-			user.setUserPort(sourcePort);
+            user.setUserIP(sourceIP);
 
-			userList.add(user);
+            user.setUserPort(sourcePort);
 
-			nameList.add(messageReceived.getMessageText());
+            userList.add(user);
 
-			System.out.println(user.getUserName() + " is online.");
+            nameList.add(messageReceived.getMessageText());
 
-			// logout
-		} else if (messageReceived.getMessageCode() == 200) {
+            System.out.println(user.getUserName() + " is online.");
 
-			for (int i = 0; i < userList.size(); i++) {
-				if (userList.get(i).getUserIP().equals(sourceIP)) {
-					System.out.println(userList.get(i).getUserName() + " is offline.");
-					nameList.remove(userList.get(i).getUserName());
-					userList.remove(i);
-				}
-			}
+            // logout
+        } else if (messageReceived.getMessageCode() == 200) {
 
-			// online users
-		} else if (messageReceived.getMessageCode() == 300) {
+            for (int i = 0; i < userList.size(); i++) {
+                if (userList.get(i).getUserIP().equals(sourceIP)) {
+                    System.out.println(userList.get(i).getUserName() + " is offline.");
+                    nameList.remove(userList.get(i).getUserName());
+                    userList.remove(i);
+                }
+            }
 
-			packetSender = new PacketSender(sourceIP.getHostAddress(), sourcePort, aSocket);
+            // online users
+        } else if (messageReceived.getMessageCode() == 300) {
 
-			MessageControl messageControl = new MessageControl();
+            packetSender = new PacketSender(sourceIP.getHostAddress(), sourcePort, aSocket);
 
-			messageControl.setMessageCode(300);
+            MessageControl messageControl = new MessageControl();
 
-			messageControl.setMessageText(gson.toJson(nameList));
+            messageControl.setMessageCode(300);
 
-			packetSender.sendJson(gson.toJson(messageControl));
+            messageControl.setMessageText(gson.toJson(nameList));
 
-		} else if (messageReceived.getMessageCode() == 400) {
+            packetSender.sendJson(gson.toJson(messageControl));
 
-			Message message = new Message();
+        } else if (messageReceived.getMessageCode() == 400) {
 
-			String recipientName = messageReceived.getMessageRecipient();
+            Message message = new Message();
 
-			String[] recipientIpAndPort = findIPAndPortByUsername(recipientName);
+            String recipientName = messageReceived.getMessageRecipient();
 
-			
-			if (recipientIpAndPort != null) {
-				packetSender = new PacketSender(recipientIpAndPort[0], Integer.parseInt(recipientIpAndPort[1]), aSocket);
+            String[] recipientIpAndPort = findIPAndPortByUsername(recipientName);
 
-				message.setMessageCode(400);
+            if (recipientIpAndPort != null) {
+                packetSender = new PacketSender(recipientIpAndPort[0], Integer.parseInt(recipientIpAndPort[1]), aSocket);
 
-				message.setMessageText(messageReceived.getMessageText());
+                message.setMessageCode(400);
 
-				message.setMessageSource(messageReceived.getMessageSource());
+                message.setMessageText(messageReceived.getMessageText());
 
-				message.setMessageRecipient(recipientName);
+                message.setMessageSource(messageReceived.getMessageSource());
 
-				packetSender.sendJson(gson.toJson(message));
-			} else {
-				System.out.println("Recipient user not found.");
-			}
+                message.setMessageRecipient(recipientName);
 
-		} else {
-			System.out.println("ERROR: invalid messageCode.");
-		}
+                packetSender.sendJson(gson.toJson(message));
+            } else {
+                System.out.println("Recipient user not found.");
+            }
 
-	}
+        } else {
+            System.out.println("ERROR: invalid messageCode.");
+        }
 
-	public static String findUsernameByIP(String userIP) {
+    }
 
-		for (User user : userList) {
-			if (user.getUserIP().equals(userIP)) {
-				return user.getUserName();
-			}
-		}
+    public static String findUsernameByIP(String userIP) {
 
-		return null;
-	}
+        for (User user : userList) {
+            if (user.getUserIP().equals(userIP)) {
+                return user.getUserName();
+            }
+        }
 
-	public static String[] findIPAndPortByUsername(String userName) {
+        return null;
+    }
 
-		String[] ipAndPort = new String[2];
+    public static String[] findIPAndPortByUsername(String userName) {
 
-		for (User user : userList) {
-			if (user.getUserName().equals(userName)) {
-				ipAndPort[0] = user.getUserIP().getHostAddress();
-				ipAndPort[1] = Integer.toString(user.getUserPort());
-				return ipAndPort;
-			}
-		}
+        String[] ipAndPort = new String[2];
 
-		return null;
-	}
+        for (User user : userList) {
+            if (user.getUserName().equals(userName)) {
+                ipAndPort[0] = user.getUserIP().getHostAddress();
+                ipAndPort[1] = Integer.toString(user.getUserPort());
+                return ipAndPort;
+            }
+        }
 
-	public static void messageReceiver() {
-		
-		String receivedString;
-		
-		try {
-			aSocket = new DatagramSocket(6698);
+        return null;
+    }
 
-			byte[] buffer = new byte[1000];
-			while (true) {
-				DatagramPacket request = new DatagramPacket(buffer, buffer.length);
-				aSocket.receive(request);
+    public static void messageReceiver() {
 
-				receivedString = new String(buffer, 0, request.getLength());
+        String receivedString;
 
-				processReceivedMessage(receivedString, request.getAddress(), request.getPort());
+        try {
+            aSocket = new DatagramSocket(6698);
 
-			}
-		} catch (SocketException e) {
-			System.out.println("Socket: " + e.getMessage());
-		} catch (IOException e) {
-			System.out.println("IO: " + e.getMessage());
-		} finally {
+            byte[] buffer = new byte[1000];
+            while (true) {
+                DatagramPacket request = new DatagramPacket(buffer, buffer.length);
+                aSocket.receive(request);
 
-			if (aSocket != null) {
-				System.out.println("Closing UDPServer socket...");
-				aSocket.close();
-			}
-		}
-	}
+                receivedString = new String(buffer, 0, request.getLength());
+
+                processReceivedMessage(receivedString, request.getAddress(), request.getPort());
+
+            }
+        } catch (SocketException e) {
+            System.out.println("Socket: " + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("IO: " + e.getMessage());
+        } finally {
+
+            if (aSocket != null) {
+                System.out.println("Closing UDPServer socket...");
+                aSocket.close();
+            }
+        }
+    }
 
 }
