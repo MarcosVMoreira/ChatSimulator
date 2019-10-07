@@ -84,13 +84,15 @@ public class Login extends javax.swing.JFrame {
     private void btnLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoginActionPerformed
 
         try {
+
             String username = txtUsername.getText();
-            
+
             Client client = new Client(username);
-            
+
             client.setVisible(true);
-            
+
             this.dispose();
+
         } catch (UnknownHostException ex) {
             Logger.getLogger(Login.class.getName()).log(Level.SEVERE, null, ex);
         } catch (SocketException ex) {

@@ -1,4 +1,5 @@
 package Controller;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -10,44 +11,44 @@ import com.google.gson.Gson;
 
 public class PacketSender {
 
-	private static String serverIP;
-	private static int serverPort;
-	private static DatagramSocket socket = null;
+    private static String serverIP;
+    private static int serverPort;
+    private static DatagramSocket socket = null;
 
-	public PacketSender(String serverIP, int serverPort, DatagramSocket socket) {
-		this.serverIP = serverIP;
-		this.serverPort = serverPort;
-		this.socket = socket;
-	}
+    public PacketSender(String serverIP, int serverPort, DatagramSocket socket) {
+        this.serverIP = serverIP;
+        this.serverPort = serverPort;
+        this.socket = socket;
+    }
 
-	public static void sendJson(String JSONInfo) throws UnknownHostException {
+    public static void sendJson(String JSONInfo) throws UnknownHostException {
 
-		InetAddress inetAdress = InetAddress.getByName(serverIP);
+        InetAddress inetAdress = InetAddress.getByName(serverIP);
 
-		Gson gson = new Gson();
+        Gson gson = new Gson();
 
-		try {
+        try {
 
-			byte[] m = JSONInfo.getBytes();
+            byte[] m = JSONInfo.getBytes();
 
-			DatagramPacket request = new DatagramPacket(m, m.length, inetAdress, serverPort);
+            DatagramPacket request = new DatagramPacket(m, m.length, inetAdress, serverPort);
 
-			System.out.println("Sending packet to IP: " + inetAdress + " port: " + serverPort);
+            System.out.println("Sending packet to IP: " + inetAdress + " port: " + serverPort);
 
-			socket.send(request);
+            socket.send(request);
 
-		} catch (SocketException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
+        } catch (SocketException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } finally {
 
-			System.out.println("PacketSender finally");
+            System.out.println("PacketSender finally");
 
-		}
+        }
 
-	}
+    }
 
 }
