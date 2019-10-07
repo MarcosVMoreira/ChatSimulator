@@ -152,6 +152,8 @@ public class UDPClient {
             aSocket.receive(receive);
 
             receivedString = new String(buffer, 0, receive.getLength());
+            
+            System.out.println("received String "+receivedString);
 
             processReceivedMessage(receivedString);
 
@@ -186,6 +188,8 @@ public class UDPClient {
             }
 
         } else if (messageReceived.getMessageCode() == 400) {
+            
+            System.out.println("messageLog: "+messageReceived);
 
             messageLog
                     = messageLog.concat("\n" + messageReceived.getMessageSource() + ": " + messageReceived.getMessageText());

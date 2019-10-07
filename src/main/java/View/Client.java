@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -21,34 +22,34 @@ import javax.swing.event.ChangeListener;
  * @author Marcos
  */
 public class Client extends javax.swing.JFrame implements ChangeListenerUDP {
-
-    private String username;
-
+    
+    private String username, chatLog = "";
+    
     private UDPClient client;
-
+    
     private DefaultListModel listModel = new DefaultListModel();
-
+    
     public Client() {
         initComponents();
-
+        
         this.setLocationRelativeTo(null);
     }
-
+    
     public Client(String username) throws UnknownHostException, SocketException {
         initComponents();
-
+        
         this.setLocationRelativeTo(null);
-
+        
         this.username = username;
-
+        
         client = new UDPClient();
-
+        
         client.logIn(username);
-
+        
         client.setChangeListener(this);
-
+        
         client.listenForNewMessages();
-
+        
         setTitle(username);
     }
 
@@ -73,6 +74,11 @@ public class Client extends javax.swing.JFrame implements ChangeListenerUDP {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
+        listOnlineusers.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                listOnlineusersValueChanged(evt);
+            }
+        });
         jScrollPane1.setViewportView(listOnlineusers);
 
         btnRefresh.setText("Refresh");
@@ -92,6 +98,11 @@ public class Client extends javax.swing.JFrame implements ChangeListenerUDP {
         jScrollPane2.setViewportView(txtAreaLog);
 
         btnSend.setText("Send");
+        btnSend.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSendActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -144,17 +155,45 @@ public class Client extends javax.swing.JFrame implements ChangeListenerUDP {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnRefreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRefreshActionPerformed
-
-        try {
-            client.retrieveOnlineUsers();
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        
+        new Thread(new Runnable() {
+            public void run() {
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        try {
+                            client.retrieveOnlineUsers();
+                        } catch (UnknownHostException ex) {
+                            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                });
+                
+                try {
+                    java.lang.Thread.sleep(100);
+                } catch (Exception e) {
+                }
+            }
+            
+        }).start();
 
     }//GEN-LAST:event_btnRefreshActionPerformed
 
-    public void setOnlineusers() throws InterruptedException {
+    private void listOnlineusersValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_listOnlineusersValueChanged
+        lbRecipient.setText(listOnlineusers.getSelectedValue());
+    }//GEN-LAST:event_listOnlineusersValueChanged
 
+    private void btnSendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSendActionPerformed
+        try {
+            client.sendText(txtChat.getText(), this.username, lbRecipient.getText());
+            
+            txtChat.setText("");
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_btnSendActionPerformed
+    
+    public void setOnlineusers() throws InterruptedException {
+        
         new Thread() {
             @Override
             public void run() {
@@ -163,25 +202,21 @@ public class Client extends javax.swing.JFrame implements ChangeListenerUDP {
                 } catch (InterruptedException ex) {
                     Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
                 }
-
+                
                 listModel.removeAllElements();
                 listOnlineusers.removeAll();
-
+                
                 ArrayList<String> onlineUsers = client.getOnlineUsers();
-
-                System.out.println("onlineUsers: " + onlineUsers);
-
+                
                 listOnlineusers.setModel(listModel);
-
+                
                 for (String user : onlineUsers) {
                     listModel.add(listModel.getSize(), user.replace("\"", ""));
                 }
-
-                System.out.println("valor: " + listModel.get(1));
-
+                
             }
         }.start();
-
+        
     }
 
     /**
@@ -218,6 +253,10 @@ public class Client extends javax.swing.JFrame implements ChangeListenerUDP {
             }
         });
     }
+    
+    public void setChatLog (String chatLog) {
+        txtAreaLog.setText(chatLog);
+    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnRefresh;
@@ -233,18 +272,19 @@ public class Client extends javax.swing.JFrame implements ChangeListenerUDP {
 
     @Override
     public void onChangeHappened() {
-
+        
         System.out.println("View.Client.onChangeHappened()");
-
+        
         System.out.println("messageLog: " + client.getMessageLog());
-
+        
         System.out.println("Online users: " + client.getOnlineUsers());
-
+        
         try {
             setOnlineusers();
+            setChatLog(client.getMessageLog());
         } catch (InterruptedException ex) {
             Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
-
+        
     }
 }
