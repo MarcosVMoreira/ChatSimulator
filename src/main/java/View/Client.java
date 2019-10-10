@@ -286,11 +286,6 @@ public class Client extends javax.swing.JFrame implements ChangeListenerUDP {
     @Override
     public void onChangeHappened() {
         
-        System.out.println("View.Client.onChangeHappened()");
-        
-        System.out.println("messageLog: " + client.getMessageLog());
-        
-        System.out.println("Online users: " + client.getOnlineUsers());
         
         try {
             setOnlineusers();
